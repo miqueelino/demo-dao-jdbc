@@ -11,7 +11,7 @@ import model.entities.Department;
 import model.entities.Seller;
 
 //implementaçao da interface SellerDao que protege os metodos que devem ser implementados
-public class SellerDaoJDBC implements SellerDao{
+public class SellerDaoJDBC implements SellerDao {
 
     //atributo de conexao com o banco de dados
     private Connection conn;   
@@ -41,6 +41,7 @@ public class SellerDaoJDBC implements SellerDao{
 
 
     //metodo auxiliar para instanciar um departamento a partir do ResultSet
+    
     @Override
     public Seller findById(Integer id) {
         PreparedStatement st = null;
@@ -55,10 +56,25 @@ public class SellerDaoJDBC implements SellerDao{
             st.setInt(1, id);
             rs = st.executeQuery();
             if (rs.next()) {
-                Department dep = new Department();
-                dep.setID(rs.getInt("DepartmentId"));
-                dep.setName(rs.getString("DepName"));
-                Seller obj = new Seller();
+                Department dep = instantiateDepartment(rs);
+                Seller obj = instantiateDeller(rs, dep);
+                return obj;
+
+            }
+            return null;
+        }
+        catch (RuntimeException e) {
+            throw new DbException(e.getMessage());
+        }
+        finally {
+            DB.closeStatement(st);
+            DB.closeResultSet(rs);
+        }
+    }
+
+    //metodo auxiliar para instanciar um vendedor a partir do ResultSet e propagar a exceçao SQLException
+    private Seller instantiateDeller(ResultSet rs, Department dep) throws SQLException {
+        Seller obj = new Seller();
                 obj.setId(rs.getInt("Id"));
                 obj.setName(rs.getString("Name"));
                 obj.setEmail(rs.getString("Email"));
@@ -66,17 +82,14 @@ public class SellerDaoJDBC implements SellerDao{
                 obj.setBirthDate(rs.getDate("BirthDate"));
                 obj.setDepartment(dep);
                 return obj;
+    }
 
-            }
-            return null;
-        }
-        catch (SQLException e){
-            throw new DbException(e.getMessage());
-        }
-        finally {
-            DB.closeStatement(st);
-            DB.closeResultSet(rs);
-        }
+    //metodo auxiliar para instanciar um departamento a partir do ResultSet e propagar a exceçao SQLException
+    private Department instantiateDepartment(ResultSet rs) throws SQLException {
+        Department dep = new Department();
+        dep.setID(rs.getInt("DepartmentId"));
+        dep.setName(rs.getString("DepName"));
+        return dep;
     }
 
     @Override

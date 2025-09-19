@@ -97,5 +97,10 @@ public class Seller implements Serializable{
                 + baseSalary + ", department=" + department + "]";
     }
 
+    public void setDepartment(Department dep) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'setDepartment'");
+    }
+
     
 }

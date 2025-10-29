@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 import model.dao.SellerDao;
@@ -52,25 +53,37 @@ public class SellerDaoJDBC implements SellerDao {
                     + "FROM seller INNER JOIN department "
                     + "ON seller.DepartmentId = department.Id "
                     + "WHERE seller.Id = ?");
-            
-            st.setInt(1, id);
-            rs = st.executeQuery();
-            if (rs.next()) {
-                Department dep = instantiateDepartment(rs);
-                Seller obj = instantiateDeller(rs, dep);
-                return obj;
 
-            }
-            return null;
+                    st.setInt(1, id);
+                    rs = st.executeQuery();
+                    if (rs.next()) {
+                        Department dep = instantiateDepartment(rs);
+                        dep.setID(rs.getInt("(DepartmentId"));
+                        dep.setName(rs.getString("DepName"));
+                        Seller obj = new Seller();
+                        obj.setId(rs.getInt("Id"));
+                        obj.setName(rs.getString("Name"));
+                        obj.setEmail(rs.getString("Email"));
+                        obj.setBaseSalary(rs.getDouble("BaseSalary"));
+                        obj.setBirthDate(rs.getDate("BirthDate"));
+                        obj.setDepartment(dep);
+                        return obj;
+
         }
-        catch (RuntimeException e) {
+                    return null;
+        }
+        catch (SQLException e) {
             throw new DbException(e.getMessage());
         }
         finally {
             DB.closeStatement(st);
-            DB.closeResultSet(rs);
+            DB.closeResultSet(rs);  
+
         }
-    }
+
+        }
+
+       
 
     //metodo auxiliar para instanciar um vendedor a partir do ResultSet e propagar a exceçao SQLException
     private Seller instantiateDeller(ResultSet rs, Department dep) throws SQLException {
@@ -96,6 +109,43 @@ public class SellerDaoJDBC implements SellerDao {
     public List<Seller> findAll() {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'findAll'");
+    }
+
+    @Override
+    public List<Seller> findByDepartment(Department department) {
+       PreparedStatement st = null;
+        ResultSet rs = null;
+        try {
+            st = conn.prepareStatement(
+                    "SELECT seller.*,department.Name as DepName "
+                    + "FROM seller INNER JOIN department "
+                    + "ON seller.DepartmentId = department.Id "
+                    + "WHERE seller.Id = ?"
+                    + "ORDER BY Name");
+            
+            st.setInt(department.getId(), 0);
+
+            rs = st.executeQuery();
+
+        
+            //While para percorrer o ResultSet, ArrayList para armazenar os vendedores
+            List<Seller> list = new ArrayList<>();
+            while (rs.next()) {
+                department = instantiateDepartment(rs);
+                Seller obj = instantiateDeller(rs, department);
+                list.add(obj);
+            }
+            return list;
+            
+        }
+        catch (RuntimeException e) {
+            throw new DbException(e.getMessage());
+        }
+        finally {
+            DB.closeStatement(st);
+            DB.closeResultSet(rs);
+        }
+
     }
 
 
